@@ -61,7 +61,7 @@ const ScreenRegister = () => {
     return (
         <View style={styles.container}>
           <Text>Tela do Professor</Text>
-          {/* {pushToken && <Text>Push Token: {pushToken}</Text>} */}
+          {pushToken && <Text>Push Token: {pushToken}</Text>}
           <Button mode='contained' onPress={handleNotify}>chamar notificação</Button>
         </View>
       );
