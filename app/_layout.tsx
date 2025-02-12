@@ -1,39 +1,44 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
-import 'react-native-reanimated';
+import { Stack } from "expo-router";
+import { AuthProvider } from "@/src/authContext";
+import { StatusBar } from "expo-status-bar";
+import { DataProvider } from "@/src/DataProvider";
+import { PaperProvider } from "react-native-paper";
+import { greenTheme } from "@/components/Theme/theme";
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+import * as Notifications from 'expo-notifications';
+import { useEffect } from "react";
 
-// Prevent the splash screen from auto-hiding before asset loading is complete.
-SplashScreen.preventAutoHideAsync();
+// Configuração das notificações
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+export default function Layout() {
 
   useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
+    const requestPermission = async () => {
+      const {status} =await Notifications.requestPermissionsAsync();
+      if(status !== 'granted'){
+        alert('Permissão para notificação não consedida');
+      };
     }
-  }, [loaded]);
-
-  if (!loaded) {
-    return null;
-  }
-
+    requestPermission();
+  },[]);
+  
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <AuthProvider>
+      <DataProvider>
+        <PaperProvider theme={greenTheme}>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" />
+          </Stack>
+          <StatusBar style="auto" />
+        </PaperProvider>
+      </DataProvider>
+    </AuthProvider>
   );
 }

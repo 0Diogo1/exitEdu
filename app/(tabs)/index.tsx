@@ -1,74 +1,89 @@
-import { Image, StyleSheet, Platform } from 'react-native';
+import { ImageBackground, Pressable, SafeAreaView, View } from 'react-native';
+import { Card, Provider as PaperProvider } from 'react-native-paper';
+import EmailInput from '@/components/Inputs/emailInput';
+import PasswordInput from '@/components/Inputs/passwordInput';
+import { Text } from 'react-native-paper';
+import SubmitButton from '@/components/Buttons/SubmitButton';
+import { useState } from 'react';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '@/src/firebase.config';
+import { greenTheme } from '@/components/Theme/theme';
+import { Link, useRouter } from 'expo-router';
+import Loader from '@/components/Loader/loader';
+import styles from './styles';
+import {  useAuth } from '@/src/authContext';
 
-import { HelloWave } from '@/components/HelloWave';
-import ParallaxScrollView from '@/components/ParallaxScrollView';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+const backGoundImage = require('../../assets/images/cupulaTeatro.jpg')
 
-export default function HomeScreen() {
+
+export default function App() {
+  const [userEmail, setUserEmail] = useState('');
+  const [userPass, setUserPass] = useState('');
+  const router = useRouter();
+  const [loading, setLoading] = useState(false)
+  const { login } = useAuth()
+  
+  const userLogin = () => {
+    setLoading(true)
+    signInWithEmailAndPassword(auth, userEmail, userPass)
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        const token = await user.getIdToken()
+
+        let userStorage = {
+          token: token,
+          id: user.uid,
+          email: user.email,
+          pushToken:''
+        }
+
+        if (user) {
+          login(userStorage)
+          router.replace('/home')
+        }
+      }).catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        alert(errorMessage)
+      }).finally(() => {
+        setLoading(false)
+      })
+  }
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12'
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-        <ThemedText>
-          Tap the Explore tab to learn more about what's included in this starter app.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          When you're ready, run{' '}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+      <PaperProvider theme={greenTheme}>
+        <ImageBackground
+          source={backGoundImage}
+          style={styles.background}
+          resizeMode="cover"
+        >
+          <View style={styles.overlay}>
+            <SafeAreaView style={styles.safeArea}>
+              <View style={styles.centerContainer}>
+                <Card>
+                  <Card.Content>
+                    <Text variant="headlineMedium" style={styles.margin16}>Login</Text>
+                    <EmailInput userEmail={userEmail} setEmail={setUserEmail} label={'Email'} />
+                    <PasswordInput userPass={userPass} setUserPass={setUserPass} label={'Senha'} />
+                    {loading ? <Loader /> : <SubmitButton action={userLogin} text={'Entrar'} />}
+                    <View style={styles.boxLink}>
+                      <Pressable>
+                        <Text style={styles.textColor}>esqueci minha senha</Text>
+                      </Pressable>
+                      <Pressable>
+                        <Link href='/newUser' style={styles.textColor}>novo usuário</Link>
+                      </Pressable>
+                    </View>
+                  </Card.Content>
+                </Card>
+              </View>
+            </SafeAreaView>
+          </View>
+        </ImageBackground>
+      </PaperProvider>
+
   );
 }
 
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
+
+
