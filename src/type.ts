@@ -10,6 +10,7 @@ export interface Aluno {
     turma:string;
     horario:string;
     professor:string;
+    pushToken?:string;
 }
 
 export interface Colaborador {

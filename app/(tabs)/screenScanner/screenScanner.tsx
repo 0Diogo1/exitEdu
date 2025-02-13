@@ -97,15 +97,8 @@ export default function App() {
         </CameraView>
         <Text style={{color:'white'}}>Aponte a câmera para o QRCODE</Text>
 
-        {loading && <ActivityIndicator size="large" color="#0000ff" />}
+        {loading && <ActivityIndicator size="large" color="#fff" />}
         {error && <Text style={styles.errorText}>{error}</Text>}
-        {(scannedData && aluno) &&  (
-          <View style={styles.resultContainer}>
-            <Text style={styles.resultText}>Nome: {aluno.nome}</Text>
-            <Text style={styles.resultText}>Turma: {aluno.turma}</Text>
-            <Text style={styles.resultText}>Horário: {aluno.horario}</Text>
-          </View>
-        )}
       </View>
     </ImageBackground>
   );

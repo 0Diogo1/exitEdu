@@ -4,66 +4,87 @@ import { View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import styles from '../styles';
 import { db } from '@/src/firebase.config';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { useAuth } from '@/src/authContext';
+import { Aluno } from '@/src/type';
 
 
 const ScreenRegister = () => {
-    const [pushToken, setPushToken] = useState<string | null>(null)
-    const {user} = useAuth()
+  const [solicitacao, setSolicitacao] = useState<Aluno | null>(null)
 
-    useEffect(() => {
-        const registerForPushNotifications = async () => {
-          const { status } = await Notifications.requestPermissionsAsync();
-          if (status !== 'granted') {
-            alert('Permissão para notificações não concedida');
-            return;
-          }
-    
-          const token = (await Notifications.getExpoPushTokenAsync()).data;
-          console.log('Push token do professor:', token);
-          setPushToken(token);
-    
-          // Salva o token no Firestore
-          const professorId = user.id; // Defina o ID do professor corretamente
-          const professorRef = doc(db, 'usuarios', professorId);
-    
-          await setDoc(professorRef, { pushToken: token }, { merge: true });
-        };
-    
-        registerForPushNotifications();
-      }, []);
 
-      const handleNotify = async () => {
-        console.log("🚀 Botão pressionado! handleNotify chamado");
-      
-        const { status } = await Notifications.getPermissionsAsync();
-        console.log("📌 Status da permissão:", status);
-      
-        if (status !== 'granted') {
-          alert('Você não tem permissão para receber notificações');
-          return;
-        }
-      
-        console.log("⏳ Solicitando token do Expo...");
-      
-        try {
-          let tokenResponse = await Notifications.getExpoPushTokenAsync();
-          console.log("📢 Resposta do getExpoPushTokenAsync:", tokenResponse);
-      
-          let { data } = tokenResponse;
-          console.log("✅ Token do Expo:", data);
-        } catch (error) {
-          console.error("❌ Erro ao pegar o token do Expo:", error);
-        }
-      };
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      setSolicitacao(notification.request.content.data.aluno)
+    });
 
-    return (
-        <View style={styles.container}>
-          <Text>Tela do Professor</Text>
-          {pushToken && <Text>Push Token: {pushToken}</Text>}
-          <Button mode='contained' onPress={handleNotify}>chamar notificação</Button>
+    const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+      setSolicitacao(response.notification.request.content.data.aluno)
+    });
+
+    return () => {
+      subscription.remove();
+      responseSubscription.remove();
+    }
+  }, []);
+
+
+  const handleResponse = async (status: string) => {
+    if (!solicitacao) return;
+
+    try {
+      const alunoRef = doc(db, 'solicitacoes', solicitacao.id);
+      await setDoc(alunoRef, { status }, { merge: true });
+
+      try {
+        const alunoRef = doc(db, 'solicitacoes', solicitacao.id);
+        await setDoc(alunoRef, { status }, { merge: true });
+
+        // Enviar notificação para o aluno
+        await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: solicitacao.pushToken,
+            title: 'Atualização da Solicitação',
+            body: `Sua solicitação foi ${status}.`,
+            data: { status },
+          }),
+        });
+
+        alert(`Você ${status} a saída de ${solicitacao.nome}`);
+      } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+        alert('Não foi possível atualizar a solicitação');
+      }
+      
+      alert('Resposta enviada');
+      setSolicitacao(null);
+    } catch (error) {
+      console.error('Erro ao atualizar status:', error);
+      alert('Erro, não foi possível atualizar a solicitação')
+    }
+  }
+
+  return (
+    <View style={styles.container}>
+      {solicitacao ? (
+        <View>
+          <Text variant='titleLarge'>Nome: {solicitacao.nome}</Text>
+          <Text variant='titleLarge'>Turma: {solicitacao.turma}</Text>
+          <Text variant='titleLarge'>Horário: {solicitacao.horario}</Text>
+          <View>
+            <Button mode='contained' onPress={() => handleResponse('aprovou')}>Aprovar</Button>
+            <Button mode='contained' onPress={() => handleResponse('negou')}>Negar</Button>
+          </View>
         </View>
-      );
+      ) : (
+        <Text>Nenhuma solicitação recebida</Text>
+      )}
+
+    </View>
+  );
 }
- export default ScreenRegister;
+export default ScreenRegister;
