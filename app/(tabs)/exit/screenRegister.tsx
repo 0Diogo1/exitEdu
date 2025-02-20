@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Text } from 'react-native-paper';
+import { Button, Card, Text } from 'react-native-paper';
 import styles from '../styles';
 import { db } from '@/src/firebase.config';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -59,7 +59,7 @@ const ScreenRegister = () => {
         console.error('Erro ao atualizar status:', error);
         alert('Não foi possível atualizar a solicitação');
       }
-      
+
       alert('Resposta enviada');
       setSolicitacao(null);
     } catch (error) {
@@ -72,19 +72,24 @@ const ScreenRegister = () => {
     <View style={styles.container}>
       {solicitacao ? (
         <View>
-          <Text variant='titleLarge'>Nome: {solicitacao.nome}</Text>
-          <Text variant='titleLarge'>Turma: {solicitacao.turma}</Text>
-          <Text variant='titleLarge'>Horário: {solicitacao.horario}</Text>
-          <View>
-            <Button mode='contained' onPress={() => handleResponse('aprovou')}>Aprovar</Button>
-            <Button mode='contained' onPress={() => handleResponse('negou')}>Negar</Button>
-          </View>
+          <Card style={styles.groupScreenSaida}>
+            <Card.Content style={styles.groupScreenSaida}>
+              <Text variant='titleLarge'>Nome: {solicitacao.nome}</Text>
+              <Text variant='titleLarge'>Turma: {solicitacao.turma}</Text>
+              <Text variant='titleLarge'>Horário: {solicitacao.horario}</Text>
+              <View style={styles.buttonSaidaContainer}>
+                <Button mode='contained' onPress={() => handleResponse('aprovou')}>Aprovar</Button>
+                <Button mode='contained' onPress={() => handleResponse('negou')}>Negar</Button>
+              </View>
+            </Card.Content>
+          </Card>
         </View>
       ) : (
         <Text>Nenhuma solicitação recebida</Text>
-      )}
+      )
+      }
 
-    </View>
+    </View >
   );
 }
 export default ScreenRegister;

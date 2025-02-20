@@ -33,7 +33,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const login = async (userData: User) => {
         await AsyncStorage.setItem("user", JSON.stringify(userData));
-        getColab(userData.id)
         router.replace("/home"); // Redireciona para Home após login
     };
 
@@ -42,24 +41,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser({ id: '', email: '', token: '', pushToken:'' });
         router.replace("/"); // Redireciona para login após logout
     };
-
-    const getColab = async (id:string) => {
-        try {
-              const docRef = doc(db, "usuarios", id);
-              const docSnap = await getDoc(docRef);
-        
-              if (docSnap.exists()) {
-                const usuariosData = docSnap.data();
-                
-
-              } else {
-                
-              }
-            } catch (err) {
-              console.log(err)
-            } finally {
-            }
-    }
 
     return (
         <AuthContext.Provider value={{ user, login, logout }}>

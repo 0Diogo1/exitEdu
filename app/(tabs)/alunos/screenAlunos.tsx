@@ -7,11 +7,28 @@ import { db } from '@/src/firebase.config'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 import { useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications';
+import { Colaborador, User } from '@/src/type'
+import { getUserId } from '@/src/db'
 
 const screenAlunos = () => {
   const { aluno } = useData()
   const router = useRouter()
   const [response, setResponse] = useState<any>();
+  const [colaborador, setColaborador] = useState<Colaborador>()
+
+
+  const fetchUser = async () => {
+    try {
+      const user = await getUserId();
+      if(user){
+        setColaborador(user)
+      }
+    } catch (error) {
+      console.error('Erro ao tentar pegar o usuário do scanner', error)
+    }
+  }
+  fetchUser();
+
 
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(notification => {
@@ -52,6 +69,9 @@ const screenAlunos = () => {
           alert('Erro: token de identificação do professor não encontrado');
           return;
         }
+        //aqui eu crio o pushtoken e devo salvar e mandar pro banco, depois criar o objeto com aluno e psuhtoken pra mandar pro professor
+        const usuarioPushToken = (await Notifications.getExpoPushTokenAsync()).data;
+        console.log(usuarioPushToken)
 
         await fetch('https://exp.host/--/api/v2/push/send', {
           method: 'POST',

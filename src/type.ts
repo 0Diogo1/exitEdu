@@ -14,6 +14,8 @@ export interface Aluno {
 }
 
 export interface Colaborador {
-    nome:string;
-    cargo:string;
+    id:string;
+    email:string;
+    token:string;
+    pushToken:string;
 }

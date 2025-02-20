@@ -109,12 +109,23 @@ const styles = StyleSheet.create({
         gap: 6,
         marginTop: 10
     },
-    groupTextForAluno:{
-        marginTop:20,
-        marginBottom:20,
-        alignItems:'center'
+    groupTextForAluno: {
+        marginTop: 20,
+        marginBottom: 20,
+        alignItems: 'center'
+    },
+    groupScreenSaida: {
+        display:'flex',
+        flexDirection: 'column',
+        gap:8,
+        padding:16
+    },
+    buttonSaidaContainer: {
+        display: 'flex',
+        gap:8,
+        
     }
-    
+
 });
 
 export default styles;
