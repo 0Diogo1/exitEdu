@@ -7,32 +7,44 @@ import { db } from '@/src/firebase.config'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
 import { useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications';
-import { Colaborador, User } from '@/src/type'
-import { getUserId } from '@/src/db'
+import { Aluno, Colaborador, ObjectNotification } from '@/src/type'
+import { getUserById, getUserId } from '@/src/db'
 
 const screenAlunos = () => {
   const { aluno } = useData()
   const router = useRouter()
-  const [response, setResponse] = useState<any>();
+  const [response, setResponse] = useState<string>();
   const [colaborador, setColaborador] = useState<Colaborador>()
+  const [objectNotification, setObjectNotification] = useState<ObjectNotification>()
 
 
-  const fetchUser = async () => {
-    try {
-      const user = await getUserId();
-      if(user){
-        setColaborador(user)
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const user = await getUserId();
+        if (user) {
+          getUserById(user.id).then((user) => {
+            setColaborador(user)
+          })
+        }
+      } catch (error) {
+        console.error('Erro ao tentar pegar o usuário do scanner', error);
       }
-    } catch (error) {
-      console.error('Erro ao tentar pegar o usuário do scanner', error)
+    };
+
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (aluno && colaborador) {
+      setObjectNotification({ aluno, colaborador });
     }
-  }
-  fetchUser();
+  }, [aluno, colaborador]);
 
 
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(notification => {
-      setResponse(notification.request.content.data)
+      setResponse(notification.request.content.data.status)
     });
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
@@ -69,9 +81,7 @@ const screenAlunos = () => {
           alert('Erro: token de identificação do professor não encontrado');
           return;
         }
-        //aqui eu crio o pushtoken e devo salvar e mandar pro banco, depois criar o objeto com aluno e psuhtoken pra mandar pro professor
-        const usuarioPushToken = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log(usuarioPushToken)
+
 
         await fetch('https://exp.host/--/api/v2/push/send', {
           method: 'POST',
@@ -81,8 +91,8 @@ const screenAlunos = () => {
           body: JSON.stringify({
             to: professorPushToken,
             title: 'Solicitação de Liberação',
-            body: `O aluno ${aluno?.nome} solicitou liberação.`,
-            data: { aluno: aluno },
+            body: `O aluno ${objectNotification?.aluno.nome} solicitou liberação.`,
+            data: { objectNotification },
           }),
         });
 
@@ -117,7 +127,7 @@ const screenAlunos = () => {
           </View>
         </>
       ) : (
-        <Text>{`reposta: ${response}`}</Text>
+        <Text>{`Solicitação ${response}`}</Text>
       )}
 
     </View>

@@ -10,12 +10,14 @@ export interface Aluno {
     turma:string;
     horario:string;
     professor:string;
-    pushToken?:string;
 }
 
 export interface Colaborador {
-    id:string;
-    email:string;
-    token:string;
-    pushToken:string;
+    nome:string,
+    cargo:string,
+    pushToken:string
+}
+export interface ObjectNotification {
+    aluno:Aluno,
+    colaborador:Colaborador
 }

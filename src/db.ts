@@ -1,21 +1,30 @@
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "./firebase.config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from 'expo-notifications';
+import { parseSync } from "@babel/core";
+import { Colaborador } from "./type";
 
 
 
-const adicionarDadosAdicionais = (uid: string, nome: string, cargo: string) => {
-    const userRef = doc(db, "usuarios", uid); // "usuarios" é o nome da coleção
-    setDoc(userRef, {
-        nome: nome,
-        cargo: cargo
-    })
-        .then(() => {
-            console.log('Cadastro bem sucedido')
+const adicionarDadosAdicionais = async (uid: string, nome: string, cargo: string) => {
+    try {
+        const userRef = doc(db, "usuarios", uid); 
+        const { data: pushToken } = await Notifications.getExpoPushTokenAsync();
+        setDoc(userRef, {
+            nome: nome,
+            cargo: cargo,
+            pushToken: pushToken
         })
-        .catch((error) => {
-            console.error("Erro ao salvar dados adicionais:", error);
-        });
+            .then(() => {
+                console.log('Cadastro bem sucedido')
+            })
+            .catch((error) => {
+                console.error("Erro ao salvar dados adicionais:", error);
+            });
+    } catch (error) {
+        
+    }
 }
 
 export default adicionarDadosAdicionais;
@@ -27,6 +36,7 @@ export const getUserId = async () => {
     if(userToken) {
         const parsedToken = JSON.parse(userToken);
         return parsedToken
+       
         
     }
 
@@ -36,3 +46,15 @@ export const getUserId = async () => {
     return null;
    }
   };
+
+  export async function getUserById(userId:string): Promise<Colaborador | undefined> {
+    const userDocRef = doc(db, "usuarios", userId); 
+    const userDoc = await getDoc(userDocRef);
+
+    if (userDoc.exists()) {
+        return userDoc.data() as Colaborador;
+    } else {
+        console.log("Usuário não encontrado!");
+        return undefined;
+    }
+}

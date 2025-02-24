@@ -5,39 +5,44 @@ import { Button, Card, Text } from 'react-native-paper';
 import styles from '../styles';
 import { db } from '@/src/firebase.config';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
-import { useAuth } from '@/src/authContext';
-import { Aluno } from '@/src/type';
+import { Aluno, ObjectNotification } from '@/src/type';
 
 
 const ScreenRegister = () => {
-  const [solicitacao, setSolicitacao] = useState<Aluno | null>(null)
+  const [solicitacao, setSolicitacao] = useState<ObjectNotification | null>(null)
 
 
   useEffect(() => {
     const subscription = Notifications.addNotificationReceivedListener(notification => {
-      setSolicitacao(notification.request.content.data.aluno)
+      console.log('Notificação recebida:', notification.request.content.data);
+      setSolicitacao(notification.request.content.data.objectNotification);
     });
 
     const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
-      setSolicitacao(response.notification.request.content.data.aluno)
+      console.log('Resposta da notificação:', response.notification.request.content.data);
+      setSolicitacao(response.notification.request.content.data.objectNotification);
     });
 
     return () => {
       subscription.remove();
       responseSubscription.remove();
-    }
+    };
   }, []);
+
+  useEffect(() => {
+    console.log('state: ', solicitacao)
+  },[solicitacao])
 
 
   const handleResponse = async (status: string) => {
     if (!solicitacao) return;
 
     try {
-      const alunoRef = doc(db, 'solicitacoes', solicitacao.id);
+      const alunoRef = doc(db, 'solicitacoes', solicitacao.aluno.id);
       await setDoc(alunoRef, { status }, { merge: true });
 
       try {
-        const alunoRef = doc(db, 'solicitacoes', solicitacao.id);
+        const alunoRef = doc(db, 'solicitacoes', solicitacao.aluno.id);
         await setDoc(alunoRef, { status }, { merge: true });
 
         // Enviar notificação para o aluno
@@ -47,20 +52,19 @@ const ScreenRegister = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            to: solicitacao.pushToken,
+            to: solicitacao.colaborador.pushToken,
             title: 'Atualização da Solicitação',
             body: `Sua solicitação foi ${status}.`,
             data: { status },
           }),
         });
 
-        alert(`Você ${status} a saída de ${solicitacao.nome}`);
+        alert(`Você ${status} a saída de ${solicitacao.aluno.nome}`);
       } catch (error) {
         console.error('Erro ao atualizar status:', error);
         alert('Não foi possível atualizar a solicitação');
       }
 
-      alert('Resposta enviada');
       setSolicitacao(null);
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
@@ -74,12 +78,12 @@ const ScreenRegister = () => {
         <View>
           <Card style={styles.groupScreenSaida}>
             <Card.Content style={styles.groupScreenSaida}>
-              <Text variant='titleLarge'>Nome: {solicitacao.nome}</Text>
-              <Text variant='titleLarge'>Turma: {solicitacao.turma}</Text>
-              <Text variant='titleLarge'>Horário: {solicitacao.horario}</Text>
+              <Text variant='titleLarge'>Nome: {solicitacao.aluno.nome}</Text>
+              <Text variant='titleLarge'>Turma: {solicitacao.aluno.turma}</Text>
+              <Text variant='titleLarge'>Horário: {solicitacao.aluno.horario}</Text>
               <View style={styles.buttonSaidaContainer}>
-                <Button mode='contained' onPress={() => handleResponse('aprovou')}>Aprovar</Button>
-                <Button mode='contained' onPress={() => handleResponse('negou')}>Negar</Button>
+                <Button mode='contained' onPress={() => handleResponse('aprovada')}>Aprovar</Button>
+                <Button mode='contained' onPress={() => handleResponse('negada')}>Negar</Button>
               </View>
             </Card.Content>
           </Card>
