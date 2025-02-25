@@ -5,10 +5,12 @@ import styles from '../styles'
 import { useData } from '@/src/DataProvider'
 import { db } from '@/src/firebase.config'
 import { doc, getDoc, onSnapshot } from 'firebase/firestore'
-import { useRouter } from 'expo-router'
+import { Link, useRouter } from 'expo-router'
 import * as Notifications from 'expo-notifications';
 import { Aluno, Colaborador, ObjectNotification } from '@/src/type'
 import { getUserById, getUserId } from '@/src/db'
+import Loader from '@/components/Loader/loader'
+
 
 const screenAlunos = () => {
   const { aluno } = useData()
@@ -16,6 +18,7 @@ const screenAlunos = () => {
   const [response, setResponse] = useState<string>();
   const [colaborador, setColaborador] = useState<Colaborador>()
   const [objectNotification, setObjectNotification] = useState<ObjectNotification>()
+  const [loadingNotification, setLoadingNotification] = useState<boolean>(false)
 
 
   useEffect(() => {
@@ -59,7 +62,7 @@ const screenAlunos = () => {
 
   const handleAction = async (id: string, event: GestureResponderEvent) => {
     if (id === 'confirmar') {
-      console.log(aluno)
+      setLoadingNotification(true)
       try {
         if (!aluno?.professor) {
           alert('Erro, ID do professor não encontrado');
@@ -101,6 +104,8 @@ const screenAlunos = () => {
       } catch (error) {
         console.error('Erro ao enviar notificação:', error);
         alert('Erro ao enviar a solicitação');
+      } finally {
+        setLoadingNotification(false)
       }
 
     } else {
@@ -119,15 +124,24 @@ const screenAlunos = () => {
             <Text variant="titleLarge">Turma: {aluno?.turma}</Text>
             <Text variant="titleLarge">Horário: {aluno?.horario}</Text>
           </View>
-          <View style={styles.groupButtonInRow}>
-            <Button mode='outlined' icon='check-bold'
-              onPress={(event) => handleAction('confirmar', event)}>Cornfirmar</Button>
-            <Button mode='outlined' icon='clock-remove' id='cancelar'
-              onPress={(event) => handleAction('cancelar', event)}>Cancelar</Button>
-          </View>
+          {loadingNotification ? (<Loader />) : (
+            <View style={styles.groupButtonInRow}>
+              <Button mode='outlined' icon='check-bold'
+                onPress={(event) => handleAction('confirmar', event)}>Cornfirmar</Button>
+              <Button mode='outlined' icon='clock-remove' id='cancelar'
+                onPress={(event) => handleAction('cancelar', event)}>Cancelar</Button>
+            </View>
+          )}
         </>
       ) : (
-        <Text>{`Solicitação ${response}`}</Text>
+        <View style={styles.cardContainer}>
+          <Text variant='headlineMedium'>{`Solicitação ${response}`}</Text>
+          <Link href='/(tabs)/screenScanner/screenScanner'>
+            <Button mode='outlined' icon='keyboard-backspace'>QRCode Scanner</Button>
+          </Link>
+
+
+        </View>
       )}
 
     </View>

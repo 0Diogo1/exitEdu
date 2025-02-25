@@ -1,7 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect, useState } from 'react';
 import { View } from 'react-native';
-import { Button, Card, Text } from 'react-native-paper';
+import { Avatar, Button, Card, Text } from 'react-native-paper';
 import styles from '../styles';
 import { db } from '@/src/firebase.config';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
@@ -31,7 +31,7 @@ const ScreenRegister = () => {
 
   useEffect(() => {
     console.log('state: ', solicitacao)
-  },[solicitacao])
+  }, [solicitacao])
 
 
   const handleResponse = async (status: string) => {
@@ -59,7 +59,7 @@ const ScreenRegister = () => {
           }),
         });
 
-        alert(`Você ${status} a saída de ${solicitacao.aluno.nome}`);
+        alert(`A saída de ${solicitacao.aluno.nome} foi ${status}`);
       } catch (error) {
         console.error('Erro ao atualizar status:', error);
         alert('Não foi possível atualizar a solicitação');
@@ -75,21 +75,20 @@ const ScreenRegister = () => {
   return (
     <View style={styles.container}>
       {solicitacao ? (
-        <View>
-          <Card style={styles.groupScreenSaida}>
-            <Card.Content style={styles.groupScreenSaida}>
-              <Text variant='titleLarge'>Nome: {solicitacao.aluno.nome}</Text>
-              <Text variant='titleLarge'>Turma: {solicitacao.aluno.turma}</Text>
-              <Text variant='titleLarge'>Horário: {solicitacao.aluno.horario}</Text>
-              <View style={styles.buttonSaidaContainer}>
-                <Button mode='contained' onPress={() => handleResponse('aprovada')}>Aprovar</Button>
-                <Button mode='contained' onPress={() => handleResponse('negada')}>Negar</Button>
-              </View>
-            </Card.Content>
-          </Card>
-        </View>
+        <>
+          <Avatar.Icon size={100} icon='account' />
+          <View style={styles.groupTextForAluno}>
+            <Text variant='titleLarge'>Nome: {solicitacao.aluno.nome}</Text>
+            <Text variant='titleLarge'>Turma: {solicitacao.aluno.turma}</Text>
+            <Text variant='titleLarge'>Horário: {solicitacao.aluno.horario}</Text>
+            <View style={styles.groupButtonInRow}>
+              <Button mode='outlined' icon='check-bold' onPress={() => handleResponse('aprovada')}>Aprovar</Button>
+              <Button mode='outlined' icon='clock-remove' onPress={() => handleResponse('negada')}>Negar</Button>
+            </View>
+          </View>
+        </>
       ) : (
-        <Text>Nenhuma solicitação recebida</Text>
+        <Text variant='headlineSmall'>Nenhuma solicitação recebida</Text>
       )
       }
 
