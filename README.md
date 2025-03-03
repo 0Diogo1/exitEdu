@@ -1,6 +1,7 @@
 # Welcome to your Expo app 👋
+
 Use esse ID para gerar um QR code para testes ID: Do5WVr5u547qKhFcxpAX
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+
 
 ## Get started
 
